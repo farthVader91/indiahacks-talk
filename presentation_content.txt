@@ -1,0 +1,94 @@
+
+---
+Primer:
+Before we delve into any topic related to concurrency, it's best if we get
+a finer understanding of what the sceduler does.
+
+The scheduler is responsible for alloting computational units of work/tasks
+onto hardware resources(processors, network links, etc).
+The tasks can be processes, threads, etc. A task can be in any of these states:
+    Inactive - Yet to start, or has been shut down.
+    Active - Eligible to run.
+    Blocked - Waiting on an external stimulus.
+    Executing - The executing task has the CPU
+Behind the scenes - 3 schedulers:
+    Job scheduler - Decides which job should be eligible to run. Loads it into
+    the main memory.
+    Medium-term scheduler - Temporarily removes processes from main memory and
+    places them in secondary memory. Handles swapping.
+    CPU scheduler - Basically keeps the CPU busy, by allocating the CPU to jobs
+    from the Ready queue.
+
+Scheduling techniques:
+    Co-operative:
+        Once a job is co-op'ly scheduled, it continues to run until it
+        explicitly relinquishes control. The scheduler then picks the
+        highest priority task from the Ready queue and schedules it
+        for executing.
+    Pre-emptive:
+        In this, a task can be suspended during the course of it's execution.
+        This can happen from external stimulus like:
+            Clock ticks, Interrupts, Signals
+        The scheduler is invoked each time any of these external events occur.
+        This is better suited for building responsive systems. But there is an
+        overhead of switching and tasking.
+Note: During each context switch, the stack(representing the state of execution
+      of a task) is preserved and switched into.
+---
+Concurrency:
+    It's where computational units of work can execute on one or more
+    cores, or time-shared threads can execute on the same processor, or
+    jobs can be shared across distributed systems.
+
+    When do you know you can employ it?
+        > You have a pool of jobs
+        > You have a single task that can be decomposed into a set of independent
+        tasks that can be executed in any arbitrary order.
+
+    Parallelism:
+        Parallelism is when two tasks run simulatenously across multiple cores.
+        Parallelism can be considered as a technique of achieving concurrency.
+---
+Tasks:
+    Tasks can be CPU-bound or IO-bound.
+    CPU-bound tasks are those that need to run actual computations on the CPU.
+    IO-bound tasks are those that result in a system call(kernel).
+    As a rule-of-thumb(and for brevity) treat all tasks that result in
+    disk-io(file reading/writing), network-calls(socket reads/writes) as io-bound,
+    and everything else as CPU-bound.
+    There are metrics to assess the task like calculating the User-CPU time and
+    CPU-time. But that is outside the scope of this talk.
+---
+Techniques:
+    Let's define a task first. Say we wanted to download a bunch of images from
+    imgur, perform some kind of image processing(create thumbnails) and store
+    them in a directory.
+    synchronous:
+        <descr>
+        <code>
+        <demo>
+        <benchmark>
+    threading:
+        <descr>
+        <code>
+        <demo>
+        <benchmark>
+    multiprocessing:
+        <descr>
+        <code>
+        <demo>
+        <benchmark>
+    greenlets/gevent:
+        <descr>
+        <code>
+        <demo>
+        <benchmark>
+    twisted:
+        <descr>
+        <code>
+        <demo>
+        <benchmark>
+---
+Closure:
+
+----
