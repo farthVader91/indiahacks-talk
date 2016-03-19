@@ -1,3 +1,4 @@
+import timeit
 import os
 from PIL import Image
 from Queue import Queue
@@ -14,28 +15,25 @@ headers = {
     'content-type': 'application/json'
 }
 
-thumbnails_dir = os.path.abspath('thumbnails')
+thumbnails_dir = os.path.abspath('var')
 
-url_fmt = 'https://api.imgur.com/3/gallery/hot/viral/{}.json'
+outfile = 'collage.jpeg'
+clg = Image.new("RGB", (256, 256))
 
-def iter_gallery_urls(repeat=5):
-    for i in xrange(repeat):
-        yield url_fmt.format(i)
+max_workers = 4
 
-def iter_jpeg_urls(url):
-    resp = requests.get(url, headers=headers)
-    result = resp.json()
-    for item in result['data']:
-        _type = item.get('type')
-        if _type and _type == 'image/jpeg':
-            yield item['link']
+link_queue = Queue()
+fpath_queue = Queue()
+
+urls = ['http://i.imgur.com/wnqXEPv.jpg',
+        'http://i.imgur.com/Qwp65mn.jpg',
+        'http://i.imgur.com/6okdWJu.jpg',
+        'http://i.imgur.com/7RR2bIS.jpg']
 
 def download_image(link):
-    print "downloading", link
     filename = link.rsplit('/', 1)[1]
     path = os.path.join(thumbnails_dir, filename)
     urlretrieve(link, filename=path)
-    print 'finished dlding'
 
 def create_thumbnail_dir():
     if not os.path.isdir(thumbnails_dir):
@@ -45,17 +43,6 @@ def resize_image(infile, size=(128, 128)):
     im = Image.open(infile)
     im.resize(size)
     return im
-
-outfile = 'collage.jpeg'
-clg = Image.new("RGB", (512, 512))
-
-max_workers = 10
-
-
-link_queue = Queue()
-fpath_queue = Queue()
-import logging
-
 
 class DownloadWorker(threading.Thread):
     def __init__(self, *args):
@@ -77,37 +64,29 @@ def process_image(path, dim):
     img = resize_image(path)
     clg.paste(img, dim)
 
-if __name__ == '__main__':
+def main():
     create_thumbnail_dir()
     downloaders = map(DownloadWorker, range(max_workers))
     for dld in downloaders:
         dld.daemon = True
         dld.start()
-    """
-    processors = map(ImageProcessor, range(max_workers))
-    for proc in processors:
-        proc.daemon = True
-        proc.start()
-    """
-    added_count = 0
-    for url in iter_gallery_urls(10):
-        for link in iter_jpeg_urls(url):
-            link_queue.put(link)
-            added_count += 1
-            if added_count == 16:
-                break
-        else:
-            continue
-        break
+    start = timeit.default_timer()
+    for url in urls:
+        link_queue.put(url)
     link_queue.join()
+    elapsed = timeit.default_timer() - start
+    print 'downloading took %.2f seconds' % elapsed
     left, upper, count = 0, 0, 1
     for image_p in iter_images():
         process_image(image_p, (left, upper))
-        print "added to collage"
         left += 128
-        if not count % 4:
+        if not count % 2:
             left = 0
             upper += 128
-            if count == 16:
+            if count == 4:
                 clg.save(outfile, 'JPEG')
         count += 1
+
+
+if __name__ == '__main__':
+    main()
